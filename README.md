@@ -124,6 +124,3 @@ http://localhost:3000
 
 # Для полного доступ нужен выделенный URL + telegram token
 
-
-```bash
-
