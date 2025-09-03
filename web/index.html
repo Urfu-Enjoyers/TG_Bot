@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ProjectHub • MiniApp</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <div id="app">
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo-cube"></div>
+        <div class="brand-text">
+          <h1>ProjectHub</h1>
+          <span class="subtitle">Коллаборации • Проекты • Сертификаты</span>
+        </div>
+      </div>
+      <div id="userChip" class="chip">...</div>
+    </header>
+
+    <main>
+      <!-- Profile -->
+      <section id="screen-profile" class="screen active">
+        <div class="card">
+          <h2>О себе</h2>
+          <div class="grid">
+            <label>ФИО / Имя
+              <input id="f_name" type="text" placeholder="Ваше имя" maxlength="100" />
+            </label>
+            <label>О себе (до 200 символов)
+              <textarea id="f_bio" rows="3" maxlength="200" placeholder="Например: 3 курс, backend Python"></textarea>
+            </label>
+          </div>
+          <div class="grid">
+            <label>Номер группы (РИ-XXXXXX)
+              <input id="f_group" type="text" placeholder="РИ-123456" />
+            </label>
+          </div>
+          <div class="grid">
+            <label>GitHub
+              <input id="f_github" type="url" placeholder="https://github.com/username" />
+            </label>
+            <label>Gitverse
+              <input id="f_gitverse" type="url" placeholder="https://gitverse/... "/>
+            </label>
+            <label>LinkedIn
+              <input id="f_linkedin" type="url" placeholder="https://linkedin.com/in/..." />
+            </label>
+          </div>
+          <div class="actions">
+            <button id="btnSaveProfile" class="btn primary">Сохранить</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Портфолио</h2>
+          <div id="portfolioList" class="list"></div>
+          <div id="certList" class="list"></div>
+        </div>
+      </section>
+
+      <!-- Rooms -->
+      <section id="screen-rooms" class="screen">
+        <div class="card header-row">
+          <h2>Комнаты</h2>
+          <button id="btnOpenCreateRoom" class="btn accent">+ Создать</button>
+        </div>
+        <div id="roomsList" class="list"></div>
+      </section>
+    </main>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+      <button data-tab="profile" class="nav-btn active">
+        <span class="icon">👤</span>
+        <span>О себе</span>
+      </button>
+      <button data-tab="rooms" class="nav-btn">
+        <span class="icon">🧩</span>
+        <span>Комнаты</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modalTitle">...</h3>
+        <button id="modalClose" class="btn ghost">✕</button>
+      </div>
+      <div id="modalBody" class="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
