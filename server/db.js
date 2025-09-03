@@ -1,7 +1,7 @@
 const Database = require('better-sqlite3');
 const fs = require('fs');
 const path = require('path');
-const { DATABASE_FILE = './data/projecthub.sqlite3' } = process.env;
+const { DATABASE_FILE = './data/campuslink.sqlite3' } = process.env;
 
 const dbDir = path.dirname(DATABASE_FILE);
 if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
