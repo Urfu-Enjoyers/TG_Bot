@@ -6,6 +6,11 @@
   --accent:#00e0a4;
   --accent-2:#11f1c6;
   --danger:#ff5c7a;
+  --diff-1:#00e0a4;
+  --diff-2:#5fe39b;
+  --diff-3:#ffd166;
+  --diff-4:#ff9f43;
+  --diff-5:#ff5c7a;
 }
 
 *{ box-sizing: border-box; }
@@ -51,8 +56,40 @@ html,body{ margin:0; padding:0; height:100%; background:var(--bg); color:var(--t
 
 .brand{ display:flex; align-items:center; gap:12px; }
 .logo-cube{
-  width:40px; height:40px; background: radial-gradient(100% 100% at 50% 0%, var(--accent), #00b586);
-  border-radius:10px; box-shadow:0 0 20px rgba(0,224,164,0.6);
+  --cube-min: 50px;
+  --cube-ideal: 9vw;                /* желаемая ширина от ширины экрана */
+  --cube-max: 72px;
+  --cube-w: clamp(var(--cube-min), var(--cube-ideal), var(--cube-max));
+
+  --cube-ar: 1;
+
+  --cube-radius: calc(var(--cube-w) * 0.25);
+  --tex-step: clamp(65px, calc(var(--cube-w) * 1), 65px); /* масштаб текстуры */
+
+  width: var(--cube-w);
+  aspect-ratio: 1 / 1;              /* поддерживаем исходное соотношение 50x40 */
+  border-radius: var(--cube-radius);
+  box-shadow: 0 0 calc(var(--cube-w) * 0.5) rgba(0,224,164,0.35);
+
+  /* Верхний слой — градиент (полупрозрачный), нижний — текстура */
+  background-image:
+    radial-gradient(80% 80% at 50% 20%,
+      rgba(0,224,164,0.95) 0%,
+      rgba(0,181,134,0.90) 55%,
+      rgba(0,181,134,0.85) 100%
+    ),
+    url('/assets/cube-texture.png');
+  background-size: cover, var(--tex-step) var(--tex-step);
+  background-repeat: no-repeat, repeat;
+  background-position: center, center;
+  background-blend-mode: overlay, normal;
+}
+
+/* Фолбэк для браузеров без aspect-ratio */
+@supports not (aspect-ratio: 1) {
+  .logo-cube {
+    height: calc(var(--cube-w) * var(--cube-ar));
+  }
 }
 .brand h1{ margin:0; font-size:20px; }
 .subtitle{ color:var(--muted); font-size:12px; }
@@ -114,37 +151,92 @@ main{ padding:16px; display:block; }
 
 .header-row{ display:flex; justify-content:space-between; align-items:center; }
 
-/* Modal */
+/* Блокирует скролл фона, когда открыта модалка */
+body.modal-open {
+  overflow: hidden;
+}
+
+/* Модалка: bottom-sheet на мобильных, центрирование на десктопе */
 .modal{
-  position:fixed; inset:0; background: rgba(0,0,0,0.55); display:flex; align-items:end; justify-content:center; padding:16px;
-  z-index: 5; /* поверх всего остального */
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: flex-end; /* снизу на мобильных */
+  justify-content: center;
+  padding: 16px;
+  z-index: 5;
 }
+
+@media (min-width: 760px){
+  .modal{
+    align-items: center; /* по центру на широких экранах */
+  }
+}
+
 .modal.hidden{ display:none; }
+
+/* Диалог: ограничиваем высоту и даём внутренний флекс-контейнер */
 .modal-dialog{
-  width:min(720px, 100%); background:var(--card); border:1px solid rgba(255,255,255,0.08); border-radius:16px 16px 8px 8px; padding:14px;
+  width: min(720px, 100%);
+  background: var(--card);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px 16px 8px 8px;
+  padding: 14px;
+  max-height: calc(100dvh - 32px);     /* чтобы диалог не вылезал за экран */
+  display: flex;
+  flex-direction: column;
 }
-.modal-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-.modal-body{ padding:6px; }
 
-/* Small badges */
-.badge{ padding:4px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.1); color:var(--accent); font-size:12px; }
-
-/* Унифицировать вид инпутов/текстовых полей в модалке */
-.modal-body label{ display:flex; flex-direction:column; gap:6px; font-size:13px; color:var(--muted); }
-.modal-body input,
-.modal-body textarea{
-  padding:12px 12px; background:#0e1226; border:1px solid rgba(255,255,255,0.08);
-  border-radius:12px; color:var(--text); outline:none;
+/* Современный вьюпорт на мобильных (если поддерживается) */
+@supports (height: 100svh) {
+  .modal-dialog{
+    max-height: calc(100svh - 32px);
+  }
 }
-.modal-body textarea{ resize:vertical; }
 
-:root{
-  --diff-1:#00e0a4;
-  --diff-2:#5fe39b;
-  --diff-3:#ffd166;
-  --diff-4:#ff9f43;
-  --diff-5:#ff5c7a;
+/* Хедер фиксируем сверху внутри диалога, чтобы крестик всегда был доступен */
+.modal-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+
+  position: sticky;
+  top: 0;
+  background: var(--card);
+  z-index: 1;
 }
+
+/* Перенос строк в заголовке и тексте модалки */
+#modalTitle{
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.modal-body,
+.modal-body .meta,
+.modal-body p{
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Тело модалки прокручивается */
+.modal-body{
+  padding: 6px;
+  flex: 1 1 auto;
+  min-height: 0;                 /* важно для корректного overflow в flex-контейнере */
+  overflow: auto;
+  -webkit-overflow-scrolling: touch; /* плавный скролл на iOS */
+}
+
+/* На очень маленьких экранах немного уменьшаем внутренние отступы */
+@media (max-width: 360px){
+  .modal-dialog{ padding: 10px; }
+  .modal-body{ padding: 4px; }
+}
+
 
 /* Шкала сложности */
 .diff-scale{ display:flex; gap:6px; user-select:none; }
@@ -171,5 +263,266 @@ main{ padding:16px; display:block; }
 .diff-scale.sm{ gap:4px; }
 .diff-scale.sm .diff-seg{ height:12px; }
 
-/* Немного воздуха в списке комнат под заголовком */
-.list .diff-scale{ margin-top:6px; }
+
+/* Состояние disabled у кнопок */
+.btn:disabled,
+.btn[disabled]{
+  opacity: .6;
+  cursor: not-allowed;
+  filter: grayscale(10%);
+}
+
+/* Подсветка обязательных полей при ошибке */
+.input-invalid{
+  border-color: #ff6b87 !important;
+  box-shadow: 0 0 0 1px rgba(255,107,135,0.35);
+}
+.input-invalid:focus{
+  outline: 2px solid rgba(255,107,135,0.7);
+  outline-offset: 2px;
+}
+
+
+
+/* ===== Room details (modal "Подробнее") ===== */
+.room-hero{
+  position: relative;
+  background: linear-gradient(180deg, rgba(0,224,164,0.10), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 14px;
+  overflow: hidden;
+  box-shadow: 0 6px 30px rgba(0, 224, 164, 0.08);
+}
+.room-hero::after{
+  content:'';
+  position:absolute; right:-60px; top:-60px;
+  width:220px; height:220px;
+  background: radial-gradient(60% 60% at 50% 50%, rgba(17,241,198,0.28), transparent 70%);
+  filter: blur(12px);
+  pointer-events:none;
+}
+.room-hero .kpis{ display:flex; flex-direction:column; gap:10px; }
+.room-hero .tags{ display:flex; flex-wrap:wrap; gap:6px; }
+
+.tag{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:6px 10px; border-radius:999px;
+  background:#0f1429; border:1px solid rgba(255,255,255,0.08);
+  color:var(--text); font-size:12px;
+}
+.tag .dot{
+  width:7px; height:7px; border-radius:50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px rgba(0,224,164,0.2);
+}
+.tag.muted{ color:var(--muted); }
+.tag.deadline{
+  border-color: rgba(255,255,255,0.12);
+  background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+}
+.tag.danger{ color:#ff6b87; border-color:#ff6b87; background: rgba(255,91,122,0.08); }
+
+.section{
+  background: var(--card);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  padding: 14px;
+  margin-top: 10px;
+}
+.section-title{
+  margin: 0 0 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-size: 12px;
+}
+
+.info-grid{ display:grid; grid-template-columns: 1fr; gap:12px; }
+@media (min-width: 760px){ .info-grid { grid-template-columns: 1fr 1fr; } }
+
+.info-block{
+  background:#0f1429;
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:12px; padding:12px;
+}
+.info-block h5{ margin:0 0 6px; font-size:13px; color:var(--muted); }
+.info-block p{ margin:0; white-space: pre-wrap; overflow-wrap:anywhere; word-break: break-word; }
+
+.members-row{ display:flex; flex-wrap:wrap; gap:8px; }
+
+.badge{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:6px 10px; border-radius:999px;
+  background:#0e1226;
+  border:1px solid rgba(255,255,255,0.08);
+  font-size:13px; color:var(--text);
+}
+.badge.admin{
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(0,224,164,0.15) inset;
+}
+
+/* Карточки заявок внутри модалки */
+.modal .item{
+  background:#0f1429;
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:12px; padding:12px;
+  display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start;
+}
+.modal .item > div:last-child{ margin-left:auto; }
+.modal .item + .item{ margin-top:8px; }
+
+.req-status{ color:var(--muted); font-size:12px; }
+.req-status.approved{ color: var(--accent); }
+.req-status.pending{ color: #ffd166; }
+.req-status.rejected{ color: #ff6b87; }
+
+.btn.block{ width:100%; }
+.divider{ height:1px; background: rgba(255,255,255,0.06); margin:10px 0; }
+
+/* compact mode merged into base selectors above */
+
+
+
+/* === Compact overrides: модалка "Подробнее" (работает с текущей разметкой) === */
+#modal .room-hero{ padding: 8px; border-radius: 12px; }
+#modal .room-hero::after{ width: 160px; height: 160px; right:-40px; top:-40px; }
+#modal .room-hero .kpis{ gap: 6px; }
+#modal .room-hero .tags{ gap: 5px; }
+#modal .tag{ padding: 4px 7px; font-size: 11px; }
+#modal .tag .dot{ width: 6px; height: 6px; }
+#modal .section{ padding: 8px; margin-top: 6px; border-radius: 12px; }
+#modal .section-title{ margin: 0 0 6px; font-size: 11px; }
+#modal .info-grid{ gap: 6px; }
+#modal .info-block{ padding: 8px; border-radius: 10px; }
+#modal .info-block h5{ margin: 0 0 4px; font-size: 12px; }
+#modal .info-block p{ line-height: 1.35; }
+#modal .divider{ margin: 6px 0; }
+#modal .section > *:first-child{ margin-top: 0 !important; }
+#modal .section > *:last-child{ margin-bottom: 0 !important; }
+#modal .info-block > *:first-child{ margin-top: 0 !important; }
+#modal .info-block > *:last-child{ margin-bottom: 0 !important; }
+#modal p{ margin: 0 0 6px !important; }
+#modal .modal-dialog{
+  padding: 8px !important;
+  border-radius: 12px !important;
+}
+#modal .modal-header{
+  margin-bottom: 6px !important;
+  padding-bottom: 4px !important;
+}
+#modal .modal-body{
+  padding: 6px !important;
+}
+
+/* Убираем лишние внешние отступы у первого/последнего блока внутри тела */
+#modal .modal-body > *:first-child{ margin-top: 0 !important; }
+#modal .modal-body > *:last-child{ margin-bottom: 0 !important; }
+
+/* Карточка внутри модалки (текущая "Подробнее") */
+#modal .card{
+  padding: 12px !important;
+  margin-bottom: 10px !important;
+  border-radius: 12px !important;
+}
+#modal .card h4{ margin: 0 0 6px !important; }
+
+/* Сжимаем инлайн-отступы из шаблона (style="margin-top: ...") */
+#modal .modal-body > div[style*="margin-top:8px"]{ margin-top: 4px !important; }
+#modal .modal-body > div[style*="margin-top:10px"]{ margin-top: 6px !important; }
+#modal .modal-body > div[style*="margin-top:12px"]{ margin-top: 8px !important; }
+
+/* Кнопочная зона */
+#modal .actions{
+  gap: 8px !important;
+  margin-top: 8px !important;
+}
+#modal .btn{ padding: 8px 12px !important; }
+
+/* Чипы и текст */
+#modal .chip{ padding: 5px 8px !important; }
+#modal .meta, #modal p{ line-height: 1.35 !important; }
+#modal p{ margin: 0 0 8px !important; }
+
+/* Бейджи участников (у тебя уже используется .badge) — компактная версия */
+#modal .badge{
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 8px !important;
+  border-radius: 10px;
+  background:#0e1226;
+  border:1px solid rgba(255,255,255,0.08);
+  font-size:12px;
+}
+
+/* Заявки в модалке */
+#modal #requestsList .item{
+  padding: 10px !important;
+  gap: 8px !important;
+}
+#modal #requestsList .item + .item{ margin-top: 8px !important; }
+
+/* На узких экранах — ещё чуть плотнее */
+@media (max-width: 420px){
+  #modal .modal-dialog{ padding: 6px !important; }
+  #modal .modal-body{ padding: 4px !important; }
+  #modal .card{ padding: 10px !important; }
+  #modal .btn{ padding: 7px 10px !important; }
+}
+
+
+
+/* === RESET внутри модалки (убираем двойные отступы) === */
+#modal h1,
+#modal h2,
+#modal h3,
+#modal h4,
+#modal h5,
+#modal p {
+  margin: 0;
+}
+
+/* Вместо margin-bottom у <p> используем компактное управление spacing */
+#modal p {
+  margin: 0 0 6px !important;
+  line-height: 1.35 !important;
+}
+
+/* Flex + gap вместо margin-трюков — секции/контейнеры внутри модалки */
+#modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  padding: 6px !important;
+}
+#modal .section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 12px;
+}
+#modal .info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+@media (min-width: 760px){
+  #modal .info-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+#modal .info-block {
+  padding: 8px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Экшен-кнопки не через inline-margin, а с gap */
+#modal .actions {
+  display: flex;
+  gap: 8px !important;
+  margin: 0 !important;
+}
