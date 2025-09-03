@@ -51,8 +51,41 @@ html,body{ margin:0; padding:0; height:100%; background:var(--bg); color:var(--t
 
 .brand{ display:flex; align-items:center; gap:12px; }
 .logo-cube{
-  width:40px; height:40px; background: radial-gradient(100% 100% at 50% 0%, var(--accent), #00b586);
-  border-radius:10px; box-shadow:0 0 20px rgba(0,224,164,0.6);
+  --cube-min: 50px;
+  --cube-ideal: 9vw;                /* желаемая ширина от ширины экрана */
+  --cube-max: 50px;
+  --cube-w: clamp(var(--cube-min), var(--cube-ideal), var(--cube-max));
+
+  --cube-ar: 1;
+
+  --cube-radius: calc(var(--cube-w) * 0.25);
+  --tex-step: clamp(75px, calc(var(--cube-w) * 1), 75px); /* масштаб текстуры */
+
+  width: var(--cube-w);
+  aspect-ratio: 1 / 1;              /* поддерживаем исходное соотношение 50x40 */
+  border-radius: var(--cube-radius);
+  box-shadow: 0 0 calc(var(--cube-w) * 0.5) rgba(0,224,164,0.35);
+
+  /* Верхний слой — градиент (полупрозрачный), нижний — текстура */
+  background-image:
+    radial-gradient(80% 80% at 50% 20%,
+      rgba(0,224,164,0.95) 0%,
+      rgba(0,181,134,0.90) 55%,
+      rgba(0,181,134,0.85) 100%
+    ),
+    url('/assets/cube-texture.png');
+  background-size: cover, var(--tex-step) var(--tex-step);
+  background-repeat: no-repeat, repeat;
+  background-position: center, center;
+  background-blend-mode: overlay, normal;
+}
+
+/* Фолбэк для браузеров без aspect-ratio */
+@supports not (aspect-ratio: 1) {
+  .logo-cube {
+    height: calc(var(--cube-w) * var(--cube-ar));
+  }
+}ckground-blend-mode: overlay, normal;
 }
 .brand h1{ margin:0; font-size:20px; }
 .subtitle{ color:var(--muted); font-size:12px; }
