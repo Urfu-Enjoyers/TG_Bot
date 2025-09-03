@@ -106,19 +106,24 @@ Pull requests приветствуются! Для серьёзных измен
 @kamenbe1337
 ## 🚀 Запуск проекта (локально)
 
-```bash
+
 # Клонируем репозиторий
-git clone https://github.com/your-org/CampusLink.git
-cd CampusLink
+git clone https://github.com/Urfu-Enjoyers/TG_Bot.git
+cd TG_Bot
 
 # Устанавливаем зависимости
-npm install   # или pip install -r requirements.txt
+npm install
+
+# Добавляем значения в .env
 
 # Запускаем сервер
-npm run dev   # или python app.py
+npm start
 
 # Frontend MiniApp доступен по адресу:
 http://localhost:3000
 
+# Для полного доступ нужен выделенный URL + telegram token
 
+
+```bash
 
