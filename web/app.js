@@ -56,7 +56,7 @@ function renderMe() {
       el.innerHTML = `
         <div>
           <h4>${p.title}</h4>
-          <div class="meta">Статус: ${p.status} • Сложность: ${difficultyScaleHTML(p.difficulty || 1, { small: true })} • Дедлайн: ${p.deadline ? new Date(p.deadline).toLocaleDateString() : '-'}</div>
+          <div class="meta">Статус: ${p.status} • Сложность: ${p.difficulty || 1} • Дедлайн: ${p.deadline ? new Date(p.deadline).toLocaleDateString() : '-'}</div>
         </div>
       `;
       portfolioList.appendChild(el);
@@ -118,32 +118,6 @@ function bindInteractiveScale(el){
   return setVal;
 }
 
-// ===== Обязательные поля и валидация =====
-function validateProfileFields() {
-  const nameEl = $('#f_name');
-  const groupEl = $('#f_group');
-  const bioEl = $('#f_bio');
-  const btn = $('#btnSaveProfile'); 
- 
-  const nameOk = !!nameEl && nameEl.value.trim().length >= 2; // минимум 2 символа
-  const groupOk = !!groupEl && groupEl.value.trim().length >= 1;
-  const bioOk = !!bioEl && bioEl.value.trim().length >= 1;
-  if (nameEl) nameEl.classList.toggle('input-invalid', !nameOk);
-  if (groupEl) groupEl.classList.toggle('input-invalid', !groupOk);
-  if (bioEl) bioEl.classList.toggle('input-invalid', !bioOk);
-  const ok = nameOk && groupOk && bioOk;
-  if (btn) btn.disabled = !ok;
-  return ok;
-}
-
-function attachProfileValidation() {
-  ['#f_name', '#f_group', '#f_bio'].forEach(sel => {
-    const el = $(sel);
-    if (el) el.addEventListener('input', validateProfileFields);
-  });
-  validateProfileFields();
-}
-
 function renderRooms() {
   const list = $('#roomsList');
   list.innerHTML = '';
@@ -162,12 +136,10 @@ function renderRooms() {
   visibleRooms.forEach(r => {
     const el = document.createElement('div');
     el.className = 'item';
-    // Обрезаем название до 25 символов с многоточием
-    const truncatedTitle = r.title.length > 25 ? r.title.substring(0, 25) + '...' : r.title;
     el.innerHTML = `
       <div>
-        <h4>${truncatedTitle}</h4>
-        <div class="meta">Сложность: ${difficultyScaleHTML(r.difficulty || 1, { small: true })} • Набор до: ${r.intake_deadline ? new Date(r.intake_deadline).toLocaleDateString() : '—'}</div>
+        <h4>${r.title}</h4>
+        <div class="meta">Сложность: ${'★'.repeat(r.difficulty || 1)}${'☆'.repeat(Math.max(0, 5-(r.difficulty||1)))} • Набор до: ${r.intake_deadline ? new Date(r.intake_deadline).toLocaleDateString() : '—'}</div>
       </div>
       <div style="display:flex; gap:8px;">
         <button class="btn" data-room="${r.id}" data-action="view">Подробнее</button>
@@ -185,51 +157,31 @@ function openModal(title, bodyHTML) {
   $('#modalTitle').textContent = title;
   $('#modalBody').innerHTML = bodyHTML;
   $('#modal').classList.remove('hidden');
-  document.body.classList.add('modal-open'); // блокируем скролл фона
 }
-
-function closeModal() {
-  $('#modal').classList.add('hidden');
-  document.body.classList.remove('modal-open'); // возвращаем скролл фона
-}
+function closeModal() { $('#modal').classList.add('hidden'); }
 
 async function openRoomModal(roomId) {
   const { room, members, isAdmin, requests, myRequest } = await api(`/api/rooms/${roomId}`);
-
-  const membersHtml = (members || []).map(m => `
-    <span class="badge ${m.role === 'admin' ? 'admin' : ''}">
-      ${m.name || m.username || ('ID ' + m.tg_id)}${m.role === 'admin' ? ' • админ' : ''}
-    </span>
-  `).join(' ');
-
-  const intakeStr = room.intake_deadline ? new Date(room.intake_deadline).toLocaleDateString() : null;
-  const deadlineStr = room.deadline ? new Date(room.deadline).toLocaleDateString() : null;
+  const membersHtml = (members || []).map(m => `<span class="badge">${m.name || m.username || ('ID '+m.tg_id)}${m.role==='admin'?' • админ':''}</span>`).join(' ');
 
   const adminControls = isAdmin ? `
-    <div class="section">
-      <div class="section-title">Заявки</div>
+    <div class="card" style="margin-top:10px;">
+      <h4>Заявки</h4>
       <div id="requestsList">
         ${requests?.length ? '' : '<div class="meta" id="noRequestsMsg">Нет заявок</div>'}
-        ${(requests || []).map(r => {
-          const statusCls =
-            r.status === 'approved' ? 'approved' :
-            r.status === 'pending' ? 'pending' :
-            r.status === 'rejected' ? 'rejected' : '';
-          return `
-            <div class="item" data-req-item="${r.id}">
-              <div>
-                <div><b class="req-name">${r.name || r.username || ('ID ' + r.tg_id)}</b></div>
-                <div class="req-status ${statusCls}">Статус: ${r.status} • ${new Date(r.created_at).toLocaleString()}</div>
-              </div>
-              <div class="actions">
-                <button class="btn danger" data-req="${r.id}" data-act="reject">Отклонить</button>
-                <button class="btn primary" data-req="${r.id}" data-act="approve">Одобрить</button>
-              </div>
+        ${(requests || []).map(r => `
+          <div class="item" data-req-item="${r.id}">
+            <div>
+              <div><b class="req-name">${r.name || r.username || ('ID ' + r.tg_id)}</b></div>
+              <div class="meta req-status">Статус: ${r.status} • ${new Date(r.created_at).toLocaleString()}</div>
             </div>
-          `;
-        }).join('')}
+            <div style="display:flex; gap:8px;">
+              <button class="btn danger" data-req="${r.id}" data-act="reject">Отклонить</button>
+              <button class="btn primary" data-req="${r.id}" data-act="approve">Одобрить</button>
+            </div>
+          </div>
+        `).join('')}
       </div>
-      <div class="divider"></div>
       <div class="actions">
         <button class="btn primary" id="btnCompleteProject">Завершить проект (сертификаты)</button>
       </div>
@@ -237,49 +189,24 @@ async function openRoomModal(roomId) {
   ` : '';
 
   openModal(room.title, `
-    <div class="room-hero">
-      <div class="kpis">
-        <div class="tags">
-          <span class="tag"><span class="dot"></span> Сложность: ${difficultyScaleHTML(room.difficulty || 1, { small: true })}</span>
-          ${intakeStr ? `<span class="tag deadline">Набор до: ${intakeStr}</span>` : ''}
-          ${deadlineStr ? `<span class="tag danger">Дедлайн: ${deadlineStr}</span>` : ''}
-        </div>
-      </div>
-    </div>
-  
-    <div class="section">
-      <div class="info-grid">
-        <div class="info-block">
-          <h5>Описание</h5>
-          <p>${room.description || '—'}</p>
-        </div>
-        <div class="info-block">
-          <h5>Требования</h5>
-          <p>${room.requirements || '—'}</p>
-        </div>
-        <div class="info-block" style="grid-column: 1 / -1;">
-          <h5>Техстек</h5>
-          <p>${room.tech_stack || '—'}</p>
-        </div>
-      </div>
-    </div>
-  
-    <div class="section">
-      <div class="section-title">Участники</div>
-      <div class="members-row" id="membersContainer">${membersHtml || '—'}</div>
+    <div class="card">
+      <div class="meta">Сложность: ${room.difficulty || 1} | Дедлайн: ${room.deadline ? new Date(room.deadline).toLocaleDateString() : '—'}</div>
+      <p style="white-space:pre-wrap">${room.description || ''}</p>
+      <div class="meta">Требования: ${room.requirements || '—'}</div>
+      <div class="meta">Техстек: ${room.tech_stack || '—'}</div>
+      <div style="margin-top:8px;">Участники: <span id="membersContainer">${membersHtml || '—'}</span></div>
       ${isAdmin ? '' : `
-        <div class="actions" id="joinArea">
+        <div class="actions" style="margin-top:12px;" id="joinArea">
           ${
             myRequest?.status === 'pending'
               ? '<span class="chip">Заявка отправлена ⏳</span>'
               : myRequest?.status === 'approved'
                 ? '<span class="chip" style="color:#00e0a4;border-color:#00e0a4">Вы в проекте ✅</span>'
-                : '<button class="btn primary block" id="btnJoinRoom">Откликнуться</button>'
+                : '<button class="btn primary" id="btnJoinRoom">Откликнуться</button>'
           }
         </div>
       `}
     </div>
-  
     ${adminControls}
   `);
 
@@ -310,7 +237,7 @@ async function openRoomModal(roomId) {
           body: JSON.stringify({ action })
         });
 
-        // убрать заявку из списка
+        // UI: убрать плашку заявки
         const item = requestsList.querySelector(`[data-req-item="${id}"]`);
         if (item) item.remove();
 
@@ -349,7 +276,7 @@ async function openRoomModal(roomId) {
       const r = await api(`/api/rooms/${roomId}/complete`, { method: 'POST', body: JSON.stringify({}) });
       const links = r.certificates.map(c => `${c.certificate_no}: ${c.url}`).join('\n');
       alert('Сертификаты созданы:\n' + links);
-      await loadRooms();
+      await loadRooms();      // обновить список, чтобы комната пропала
       closeModal();
       setActiveTab('rooms');
     } catch (e) {
@@ -361,77 +288,41 @@ async function openRoomModal(roomId) {
 function openCreateRoomModal() {
   openModal('Создать комнату', `
     <div class="grid">
-      <label>Название (не более 50 символов)
-        <input id="cr_title" type="text" placeholder="Например: Telegram‑бот для кампуса" maxlength="50" required />
+      <label>Название
+        <input id="cr_title" type="text" placeholder="Например: Telegram‑бот для кампуса" maxlength="120" />
       </label>
 
       <label>Сложность
         ${difficultyScaleHTML(2, { interactive: true, id: 'cr_diffScale' })}
       </label>
 
-      <label>Набор участников до (дата не должна быть позже дедлайна проекта)
+      <label>Набор до
         <input id="cr_intake" type="date" />
       </label>
-      <label>Дедлайн проекта (дата не должна быть раньше даты набора участников)
+      <label>Дедлайн проекта
         <input id="cr_deadline" type="date" />
       </label>
 
-      <label>Краткое описание (не более 300 символов)
-        <textarea id="cr_desc" rows="3" maxlength="300" placeholder="Идея, цель и формат участия" style="resize: none;"></textarea>
+      <label>Краткое описание
+        <textarea id="cr_desc" rows="3" maxlength="300" placeholder="Идея, цель и формат участия"></textarea>
       </label>
-      <label>Требования к команде (не более 300 символов)
-        <textarea id="cr_req" rows="3" maxlength="300" placeholder="Например: 2 backend, 1 дизайнер; базовые знания Git обязательны" style="resize: none;"></textarea>
+      <label>Требования к команде
+        <textarea id="cr_req" rows="3" placeholder="Например: 2 backend, 1 дизайнер; базовые знания Git обязательны"></textarea>
       </label>
-      <label>Техстек (не более 300 символов)
-        <input id="cr_stack" type="text" maxlength="300" placeholder="Например: Python, FastAPI, PostgreSQL, Figma" />
+      <label>Техстек
+        <input id="cr_stack" type="text" placeholder="Например: Python, FastAPI, PostgreSQL, Figma" />
       </label>
     </div>
 
     <div class="actions">
-      <button class="btn primary" id="cr_create" disabled>Создать</button>
+      <button class="btn primary" id="cr_create">Создать</button>
     </div>
   `);
 
-  // Привязываем интерактив к шкале
   const diffEl = document.getElementById('cr_diffScale');
   bindInteractiveScale(diffEl);
 
-  // Валидация обязательных полей (название)
-  const titleEl = document.getElementById('cr_title');
-  const createBtn = document.getElementById('cr_create');
-  const deadlineEl = document.getElementById('cr_deadline');
-  const descEl = document.getElementById('cr_desc'); // краткое описание
-  const reqEl = document.getElementById('cr_req'); // требования к команде
-  const stackEl = document.getElementById('cr_stack'); // техстек
-  const validateRoom = () => {
-    const titleOk = titleEl.value.trim().length >= 3;
-    const deadlineOk = deadlineEl.value !== '';
-    const descOk = descEl.value.trim().length <= 300 && descEl.value !== '';
-    const reqOk = reqEl.value.trim().length <= 300 && reqEl.value !== '';
-    const stackOk = stackEl.value.trim().length <= 300 && stackEl.value !== '';
-    
-    titleEl.classList.toggle('input-invalid', !titleOk);
-    deadlineEl.classList.toggle('input-invalid', !deadlineOk);
-    descEl.classList.toggle('input-invalid', !descOk);
-    reqEl.classList.toggle('input-invalid', !reqOk);
-    stackEl.classList.toggle('input-invalid', !stackOk);
-    
-    const ok = titleOk && deadlineOk && descOk && reqOk && stackOk;
-    createBtn.disabled = !ok;
-    return ok;
-  };
-  titleEl.addEventListener('input', validateRoom);
-  deadlineEl.addEventListener('input', validateRoom);
-  descEl.addEventListener('input', validateRoom);
-  reqEl.addEventListener('input', validateRoom);
-  stackEl.addEventListener('input', validateRoom);
-  validateRoom();
-
   document.getElementById('cr_create').addEventListener('click', async () => {
-    if (!validateRoom()) {
-      alert('Заполните обязательные поля: Название (не короче 3 символов), даты, описание, требования и техстек.');
-      return;
-    }
     const payload = {
       title: document.getElementById('cr_title').value.trim(),
       difficulty: Number(diffEl.dataset.value || 1),
@@ -441,17 +332,6 @@ function openCreateRoomModal() {
       requirements: document.getElementById('cr_req').value || '',
       tech_stack: document.getElementById('cr_stack').value || ''
     };
-
-    // Дополнительно: проверка, что intake_deadline не позже deadline
-    if (payload.intake_deadline && payload.deadline) {
-      const intakeDate = new Date(payload.intake_deadline);
-      const deadlineDate = new Date(payload.deadline);
-      if (intakeDate > deadlineDate) {
-        alert('Дата набора не может быть позже дедлайна проекта.');
-        return;
-      }
-    }
-
     try {
       await api('/api/rooms', { method: 'POST', body: JSON.stringify(payload) });
       await loadRooms();
@@ -480,15 +360,8 @@ function setupUI() {
     btn.addEventListener('click', () => setActiveTab(btn.dataset.tab));
   });
 
-  // Валидация профиля (обязательные поля)
-  attachProfileValidation();
-
   // Сохранение профиля
   $('#btnSaveProfile').addEventListener('click', async () => {
-    if (!validateProfileFields()) {
-      alert('Заполните обязательные поля профиля.');
-      return;
-    }
     const payload = {
       name: $('#f_name').value,
       bio: $('#f_bio').value,
