@@ -1,0 +1,175 @@
+:root{
+  --bg:#0f1221;
+  --card:#171a2e;
+  --muted:#8ca3b0;
+  --text:#f2f8f8;
+  --accent:#00e0a4;
+  --accent-2:#11f1c6;
+  --danger:#ff5c7a;
+}
+
+*{ box-sizing: border-box; }
+html,body{ margin:0; padding:0; height:100%; background:var(--bg); color:var(--text); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; }
+
+#app{
+  min-height:100dvh;
+  padding-bottom:76px;
+  position: relative;
+  isolation: isolate; /* создаём собственный стек наложения, чтобы “куб” был между фоном и контентом */
+}
+
+/* Декоративный “зелёный куб” на фоне */
+#app::before{
+  content:'';
+  position: fixed;
+  top:-120px;
+  right:-80px; /* поменяйте на left:-80px, если нужен слева */
+  width: clamp(180px, 22vw, 300px);
+  height: 140dvh; /* длиннее экрана, чтобы тянулся до низа */
+  background: radial-gradient(100% 100% at 50% 0%, var(--accent), #00b586);
+  border-radius: 24px;
+  transform: rotate(25deg);
+  box-shadow:
+    0 0 80px rgba(0,224,164,0.35),
+    0 0 160px rgba(0,224,164,0.18) inset;
+  opacity:.6;
+  z-index: 0;
+  pointer-events:none;
+}
+
+/* Контент поверх “куба” */
+.app-header, main, .bottom-nav{
+  position: relative;
+  z-index: 1;
+}
+
+.app-header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 16px; background: linear-gradient(180deg, rgba(0,224,164,0.08), transparent);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.brand{ display:flex; align-items:center; gap:12px; }
+.logo-cube{
+  width:40px; height:40px; background: radial-gradient(100% 100% at 50% 0%, var(--accent), #00b586);
+  border-radius:10px; box-shadow:0 0 20px rgba(0,224,164,0.6);
+}
+.brand h1{ margin:0; font-size:20px; }
+.subtitle{ color:var(--muted); font-size:12px; }
+
+.chip{
+  background:#12152a; border:1px solid rgba(255,255,255,0.06); padding:6px 10px; border-radius:999px; color:var(--muted);
+}
+
+main{ padding:16px; display:block; }
+
+.card{
+  background:var(--card);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius:16px; padding:16px; margin-bottom:14px;
+  box-shadow: 0 6px 30px rgba(0, 224, 164, 0.06);
+}
+
+.card h2{ margin-top:0; margin-bottom:12px; }
+
+.grid{ display:grid; gap:12px; grid-template-columns: 1fr 1fr; }
+.grid label{ display:flex; flex-direction:column; gap:6px; font-size:13px; color:var(--muted); }
+.grid input,.grid textarea{
+  padding:12px 12px; background:#0e1226; border:1px solid rgba(255,255,255,0.08); border-radius:12px; color:var(--text);
+  outline:none;
+}
+.grid textarea{ resize:vertical; }
+@media (max-width: 760px){ .grid{ grid-template-columns: 1fr; } }
+
+.actions{ display:flex; gap:10px; margin-top:8px; }
+
+.btn{
+  padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.1);
+  background:#12162b; color:var(--text); cursor:pointer;
+}
+.btn.primary{ background: linear-gradient(135deg, var(--accent), var(--accent-2)); color:#00140e; font-weight:700; border:none; }
+.btn.accent{ background:transparent; border:1px solid var(--accent); color:var(--accent); }
+.btn.ghost{ background:transparent; color:var(--muted); border:1px solid rgba(255,255,255,0.06); }
+.btn.danger{ background: #2a0f19; border-color:#ff6b87; color:#ff6b87; }
+
+.list{ display:flex; flex-direction:column; gap:10px; }
+.list .item{
+  background:#0f1429; border:1px solid rgba(255,255,255,0.06); padding:12px; border-radius:12px;
+  display:flex; justify-content:space-between; gap:10px; align-items:center;
+}
+.item .meta{ color:var(--muted); font-size:12px; }
+.item h4{ margin:0 0 6px; }
+
+.bottom-nav{
+  position:fixed; bottom:0; left:0; right:0; height:70px; background:#12162b;
+  display:flex; border-top:1px solid rgba(255,255,255,0.06);
+}
+.nav-btn{
+  flex:1; background:transparent; border:none; color:var(--muted); display:flex; flex-direction:column; gap:4px; align-items:center; justify-content:center; font-size:12px;
+}
+.nav-btn.active{ color:var(--accent); }
+
+.screen{ display:none; }
+.screen.active{ display:block; }
+
+.header-row{ display:flex; justify-content:space-between; align-items:center; }
+
+/* Modal */
+.modal{
+  position:fixed; inset:0; background: rgba(0,0,0,0.55); display:flex; align-items:end; justify-content:center; padding:16px;
+  z-index: 5; /* поверх всего остального */
+}
+.modal.hidden{ display:none; }
+.modal-dialog{
+  width:min(720px, 100%); background:var(--card); border:1px solid rgba(255,255,255,0.08); border-radius:16px 16px 8px 8px; padding:14px;
+}
+.modal-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.modal-body{ padding:6px; }
+
+/* Small badges */
+.badge{ padding:4px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.1); color:var(--accent); font-size:12px; }
+
+/* Унифицировать вид инпутов/текстовых полей в модалке */
+.modal-body label{ display:flex; flex-direction:column; gap:6px; font-size:13px; color:var(--muted); }
+.modal-body input,
+.modal-body textarea{
+  padding:12px 12px; background:#0e1226; border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px; color:var(--text); outline:none;
+}
+.modal-body textarea{ resize:vertical; }
+
+:root{
+  --diff-1:#00e0a4;
+  --diff-2:#5fe39b;
+  --diff-3:#ffd166;
+  --diff-4:#ff9f43;
+  --diff-5:#ff5c7a;
+}
+
+/* Шкала сложности */
+.diff-scale{ display:flex; gap:6px; user-select:none; }
+.diff-scale .diff-seg{
+  flex:1; height:16px;
+  background:#0e1226;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:6px;
+  transition: transform .05s ease, background-color .2s, border-color .2s;
+}
+.diff-scale .diff-seg.on[data-i="1"]{ background:var(--diff-1); }
+.diff-scale .diff-seg.on[data-i="2"]{ background:var(--diff-2); }
+.diff-scale .diff-seg.on[data-i="3"]{ background:var(--diff-3); }
+.diff-scale .diff-seg.on[data-i="4"]{ background:var(--diff-4); }
+.diff-scale .diff-seg.on[data-i="5"]{ background:var(--diff-5); }
+
+.diff-scale.interactive .diff-seg{ cursor:pointer; }
+.diff-scale.interactive .diff-seg:hover{ transform: translateY(-1px); }
+.diff-scale.interactive .diff-seg:focus{
+  outline:2px solid var(--accent);
+  outline-offset:2px;
+}
+
+.diff-scale.sm{ gap:4px; }
+.diff-scale.sm .diff-seg{ height:12px; }
+
+/* Немного воздуха в списке комнат под заголовком */
+.list .diff-scale{ margin-top:6px; }
