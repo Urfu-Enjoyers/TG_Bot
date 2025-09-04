@@ -535,7 +535,7 @@ async function openRoomModal(roomId) {
     if (!confirm('Завершить проект и сгенерировать сертификаты всем участникам?')) return;
     try {
       const r = await api(`/api/rooms/${roomId}/complete`, { method: 'POST', body: JSON.stringify({}) });
-      const links = (r?.certificates || []).map(c => `${c.certificate_no}: ${c.url}`).join('\n');
+      const links = (r?.certificates || []).map(c => `${c.certificate_no}`).join('\n');
       alert('Сертификаты созданы:\n' + links);
       await loadRooms();
       closeModal();
